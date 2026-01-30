@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broneeri pildistamine - Alex Herodes</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- GLOBAL & BRANDING --- */
+        body { background-color: #000; color: white; font-family: "Comfortaa", sans-serif; }
+        .booking-container { 
+            background: #111; 
+            padding: 30px; 
+            border-radius: 15px; 
+            margin-top: 50px; 
+            margin-bottom: 50px;
+            border: 1px solid #333; 
+        }
+
+        .booking-header {
+            color: #ffffff;
+            font-weight: bold;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* --- UNIFIED COLOR OVERRIDES (#69a64e) --- */
+        .datepicker-date-display { background-color: #69a64e !important; }
+        .datepicker-day-selected, .datepicker-day-selected:focus { background-color: #69a64e !important; color: white !important; }
+        .datepicker-cancel, .datepicker-done, .datepicker-today { color: #69a64e !important; }
+        .is-today { color: #69a64e !important; }
+
+        .input-field input:focus + label, .materialize-textarea:focus + label { color: #69a64e !important; }
+        .input-field input:focus, .materialize-textarea:focus { 
+            border-bottom: 1px solid #69a64e !important; 
+            box-shadow: 0 1px 0 0 #69a64e !important; 
+        }
+
+        /* Dropdown Colors */
+        .dropdown-content { background-color: #222 !important; }
+        .dropdown-content li > span { color: #69a64e !important; }
+        .dropdown-content li:hover { background-color: #333 !important; }
+        
+        /* UNIFYING FIELD HEIGHTS AND ALIGNMENT */
+        .input-field {
+            margin-top: 2rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        /* LISATUD: .materialize-textarea siia nimekirja, et tekst oleks valge */
+        input.select-dropdown, .datepicker, input[type=text], input[type=email], input[type=tel], input[type=number], .materialize-textarea {
+            color: white !important;
+            margin-bottom: 0 !important;
+            height: 3rem !important;
+            border-bottom: 1px solid #9e9e9e !important;
+        }
+
+        /* --- FLOATING LABEL LOGIC --- */
+        /* This ensures the label for BOTH input and select sit at the same height */
+        .input-field label {
+            transform: translateY(12px) scale(1) !important;
+            color: #9e9e9e !important;
+        }
+
+        /* This moves the label up when focused or has content */
+        .input-field label.active {
+            transform: translateY(-14px) scale(0.8) !important;
+            transform-origin: 0 0 !important;
+        }
+
+        /* Specific fix for Select overlapping: Hide the placeholder text when selected */
+        .select-wrapper input.select-dropdown {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- CALENDAR DROPDOWN FIX --- */
+        .datepicker-controls select {
+            display: inline-block !important; 
+            color: #000 !important;           
+            background-color: #fff !important; 
+            width: auto !important;
+            border: 1px solid #ccc !important;
+        }
+        .datepicker-controls select option { color: #000; background-color: #fff; }
+
+        /* Validation & Helpers */
+        select[required] {
+            display: block; position: absolute;
+            height: 0; width: 0; opacity: 0; pointer-events: none;
+        }
+        .btn-submit { background-color: #69a64e !important; width: 100%; font-weight: bold; margin-top: 20px; }
+        .btn-submit:hover { background-color: #588d41 !important; }
+        .btn-submit:disabled { background-color: #333 !important; color: #888 !important; }
+        .modal { background-color: #fff !important; color: #000 !important; }
+        .datepicker-table { color: #000; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="booking-container">
+        <h4 class="center-align booking-header">Broneeri aeg</h4>
+        
+        <form id="bookingForm">
+            <div class="row">
+                <div class="input-field col s12 m6">
+                    <input type="text" class="datepicker" id="date" required>
+                    <label for="date">Vali kuupäev</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <select id="time" required>
+                        <option value="" disabled selected></option>
+                    </select>
+                    <label id="timeLabel" for="time">Vali kellaaeg</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <select id="propertyType" onchange="togglePropertyFields()" required>
+                        <option value="" disabled selected></option>
+                        <option value="korter">Korter</option>
+                        <option value="maja">Maja</option>
+                        <option value="majaosa">Majaosa</option>
+                        <option value="aripind">Äripind</option>
+                    </select>
+                    <label for="propertyType">Objekti tüüp</label>
+                </div>
+            </div>
+
+            <div id="apartmentFields" class="row hidden">
+                <div class="input-field col s12">
+                    <select id="rooms">
+                        <option value="1" selected>1 tuba</option>
+                        <option value="2">2 tuba</option>
+                        <option value="3">3 tuba</option>
+                        <option value="4">4 tuba</option>
+                        <option value="5">5 tuba</option>
+                        <option value="6">6 tuba</option>
+                    </select>
+                    <label>Tubade arv</label>
+                </div>
+            </div>
+
+            <div id="areaFields" class="row hidden">
+                <div class="input-field col s12">
+                    <input type="number" id="sqm">
+                    <label for="sqm">Ruutmeetrid (m²)</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <input type="text" id="clientName" required>
+                    <label for="clientName">Nimi või Ettevõte</label>
+                </div>
+                <div class="input-field col s12">
+                    <input type="text" id="address" required>
+                    <label for="address">Objekti aadress</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <input type="tel" id="phone" required>
+                    <label for="phone">Telefon</label>
+                </div>
+                <div class="input-field col s12 m6">
+                    <input type="email" id="email" required>
+                    <label for="email">E-mail</label>
+                </div>
+                <div class="input-field col s12">
+                    <textarea id="comments" class="materialize-textarea"></textarea>
+                    <label for="comments">Lisamärkused</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-large btn-submit">Kinnita Broneering</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKAV8OcQ5MsqYNXp-xuwZ1iogL0l-zW-k",
+    authDomain: "repbah-4b582.firebaseapp.com",
+    projectId: "repbah-4b582",
+    storageBucket: "repbah-4b582.firebasestorage.app",
+    messagingSenderId: "193703396987",
+    appId: "1:193703396987:web:5f41ae12871a6a2d1e04de"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let blockedDates = []; 
+
+  function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
+  }
+
+  async function loadBlockedDates() {
+      try {
+          const q = query(collection(db, "blocked_days"));
+          const snapshot = await getDocs(q);
+          snapshot.forEach(doc => {
+              if (doc.data().fullDay === true) blockedDates.push(doc.id);
+          });
+          initDatepicker(); 
+      } catch (e) {
+          console.error(e);
+          initDatepicker();
+      }
+  }
+
+  function initDatepicker() {
+      const elems = document.querySelectorAll('.datepicker');
+      M.Datepicker.init(elems, {
+          format: 'dd.mm.yyyy',
+          firstDay: 1,
+          autoClose: true,
+          disableDayFn: (date) => blockedDates.includes(formatDate(date)),
+          i18n: {
+             cancel: 'Katkesta', done: 'Vali',
+             months: ['Jaanuar', 'Veebruar', 'Märts', 'Aprill', 'Mai', 'Juuni', 'Juuli', 'August', 'September', 'Oktoober', 'November', 'Detsember'],
+             monthsShort: ['Jaan', 'Veebr', 'Märts', 'Apr', 'Mai', 'Juun', 'Juul', 'Aug', 'Sept', 'Okt', 'Nov', 'Dets'],
+             weekdays: ['Pühapäev', 'Esmaspäev', 'Teisipäev', 'Kolmapäev', 'Neljapäev', 'Reede', 'Laupäev'],
+             weekdaysShort: ['Püh', 'Esm', 'Tei', 'Kol', 'Nel', 'Ree', 'Lau'],
+             weekdaysAbbrev: ['P','E','T','K','N','R','L']
+          },
+          onSelect: (date) => checkAvailability(date)
+      });
+  }
+
+  async function checkAvailability(date) {
+      const dateString = formatDate(date);
+      const timeSelect = document.getElementById('time');
+      const timeLabel = document.getElementById('timeLabel');
+      
+      timeSelect.innerHTML = '<option value="" disabled selected></option>';
+      M.FormSelect.init(timeSelect);
+
+      try {
+          const bookingsQuery = query(collection(db, "bookings"), where("date", "==", dateString));
+          const bookingsSnapshot = await getDocs(bookingsQuery);
+          const takenTimes = [];
+          bookingsSnapshot.forEach(doc => {
+               if (doc.data().status !== 'cancelled') takenTimes.push(doc.data().time);
+          });
+
+          const blockDoc = await getDoc(doc(db, "blocked_days", dateString));
+          if (blockDoc.exists() && blockDoc.data().times) {
+              blockDoc.data().times.forEach(t => takenTimes.push(t));
+          }
+
+          const allTimes = ["10:00-11:00", "11:00-12:00", "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00"];
+          let html = '<option value="" disabled selected></option>';
+          
+          allTimes.forEach(time => {
+              if (takenTimes.includes(time)) {
+                  html += `<option value="${time}" disabled>${time} (Hõivatud)</option>`;
+              } else {
+                  html += `<option value="${time}">${time}</option>`;
+              }
+          });
+
+          timeSelect.innerHTML = html;
+          M.FormSelect.init(timeSelect);
+          
+          if (timeSelect.value === "") {
+              timeLabel.classList.remove('active');
+          } else {
+              timeLabel.classList.add('active');
+          }
+          M.updateTextFields();
+      } catch (error) {
+          console.error(error);
+          M.FormSelect.init(timeSelect);
+      }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      M.FormSelect.init(document.querySelectorAll('select'));
+      loadBlockedDates();
+  });
+
+  window.togglePropertyFields = function() {
+       const type = document.getElementById('propertyType').value;
+       const apartmentFields = document.getElementById('apartmentFields');
+       const areaFields = document.getElementById('areaFields');
+       if (type === 'korter') {
+           apartmentFields.classList.remove('hidden');
+           areaFields.classList.add('hidden');
+       } else {
+           apartmentFields.classList.add('hidden');
+           areaFields.classList.remove('hidden');
+       }
+       M.FormSelect.init(document.querySelectorAll('select'));
+       M.updateTextFields();
+  }
+
+  document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.querySelector('.btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Saadan...";
+
+    const type = document.getElementById('propertyType').value;
+    let detailsValue = (type === 'korter') ? document.getElementById('rooms').value + " tuba" : document.getElementById('sqm').value + " m²";
+
+    const bookingData = {
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        propertyType: type,
+        details: detailsValue,
+        clientName: document.getElementById('clientName').value,
+        address: document.getElementById('address').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        comments: document.getElementById('comments').value,
+        status: 'pending', 
+        createdAt: serverTimestamp()
+    };
+
+    try {
+        await addDoc(collection(db, "bookings"), bookingData);
+        alert("Broneering edukalt saadetud!");
+        document.getElementById('bookingForm').reset();
+        M.updateTextFields();
+    } catch (error) {
+        alert("Viga: " + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Kinnita Broneering";
+    }
+  });
+</script>
+</body>
+</html>

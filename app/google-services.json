@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "193703396987",
+    "project_id": "repbah-4b582",
+    "storage_bucket": "repbah-4b582.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193703396987:android:baee9c7c8f8f7a661e04de",
+        "android_client_info": {
+          "package_name": "com.alexherodes.repbah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANuGQHF6AX0nsW6kfnKw6RLGmqoMhJapk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. BLOCKED DAYS (Public see, Admin edit)
+    match /blocked_days/{dateId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 2. BOOKINGS (Public create/read, Admin edit)
+    match /bookings/{bookingId} {
+      allow create: if true;
+      allow read: if true; // <--- CHANGE THIS LINE (Was 'auth != null')
+      allow update, delete: if request.auth != null;
+    }
+  }
+}
