@@ -1,4 +1,4 @@
-# Repbah Booking System
+# REPBAH Booking System
 
 A professional full-stack booking ecosystem designed for a real estate photography business. The system consists of a **public-facing web portal** for clients and a **native Android Admin App** for business management.
 
